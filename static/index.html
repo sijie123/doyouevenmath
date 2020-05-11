@@ -1,0 +1,289 @@
+<html>
+  <head>
+    <style>
+      @font-face { font-family: Consolas; src: url('clacon.ttf'); }
+      body {
+        background-color: #000000;
+      }
+      .mainText {
+        color: #ffffff;
+        font-family: Consolas;
+        font-size: 100px;
+      }
+      .timerText {
+        color: #ffffff;
+        font-family: Consolas;
+        font-size: 30px;
+      }
+      .niceInput {
+        height: 100px;
+        background-color: #000000;
+        font-size: 100px;
+        width: 300px;
+        border-color: #000000;
+        outline: none;
+        color: #ffffff;
+        font-family: Consolas;
+      }
+      .header {
+        height: 20px;
+        width: 400px;
+        background-color: #ffffff;
+        float: right;
+      }
+      .headerFont {
+        color: #000000;
+        font-size: 16px;
+        vertical-align:bottom;
+        font-family: Consolas;
+        padding-top: 2px;
+        padding-left: 15px;
+      }
+      .card {
+        height: 50px;
+        width: 400px;
+        background-color: #ffffff;
+        float: right;
+        position: relative;
+      }
+      .scoreboard {
+        width: 500px;
+        position: fixed;
+        top: 0;
+        right: 0
+      }
+      .nameFont {
+        color: #000000;
+        font-size: 38px;
+        vertical-align:bottom;
+        font-family: Consolas;
+        padding-top: 6px;
+        padding-left: 15px;
+        display: inline-block;
+        width: 60%;
+      }
+      .scoreFont {
+        color: #000000;
+        font-size: 38px;
+        vertical-align:bottom;
+        font-family: Consolas;
+        padding-top: 6px;
+        padding-left: 15px;
+        display: inline;
+        width: 30%;
+      }
+      .popUp {
+        background-color: #d0d0d0;
+        border: 1px black;
+        border-color: #ffffff;
+        box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        z-index: 100;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+    <script>
+    var ans = -1;
+    var sc = 0;
+    var time = 30;
+    var interval;
+    var otherPlayer;
+    var username;
+    function playCorrect() {
+      //$("#card3").insertBefore($("#card1"));
+      var audio = new Audio('ding.wav');
+      audio.play();
+    }
+    function playWrong() {
+      var audio = new Audio('dang.wav');
+      audio.play();
+    }
+    function newQn() {
+      $("#user").val("");
+      var op = Math.round(Math.random() * Math.floor(sc / 2) + 1);
+      if (op == 1) {
+        var a = Math.floor(Math.random() * 25 + 1);
+        var b = Math.floor(Math.random() * 25 + 1);
+        ans = a + b;
+        $("#qn").html(a + " + " + b + " = ");
+      }
+      else if (op == 2) {
+        var a = Math.floor(Math.random() * 25 + 1);
+        var b = Math.floor(Math.random() * 25 + 1);
+        var temp = Math.max(a,b);
+        b = Math.min(a,b);
+        a = temp;
+        ans = a - b;
+        $("#qn").html(a + " - " + b + " = ");
+      }
+      else if (op == 3) {
+        var a = Math.floor(Math.random() * 25 + 1);
+        var b = Math.floor(Math.random() * 12 + 1);
+        ans = a * b;
+        $("#qn").html(a + " * " + b + " = ");
+      }
+      else {
+        var a = Math.floor(Math.random() * 20 + 1);
+        var b = Math.floor(Math.random() * 12 + 1);
+        ans = b;
+        $("#qn").html(a*b + " / " + a + " = ");
+      }
+      //ans = a + b;
+
+    }
+    function endGame() {
+      console.log(username);
+      clearInterval(interval);
+      time = 0;
+      $("#user").val("");
+      $("#user").off("keypress");
+      $("#restart").css('display', "block");
+      $("#qn").html("Your score: " + sc);
+      $("#timer").html("00:00");
+      $("#user").hide();
+      postScore();
+    }
+    function format(time) {
+      if (time < 10) {
+        return "0" + time;
+      }
+      return time;
+    }
+    function updateScore() {
+      $("#score").html(sc);
+    }
+    /*function moveUp(card) {
+      if (card.prev()){
+        var t = card;
+        var prev = t.prev();
+        t.toggleClass("popUp").animate({
+          top: [ "-50px", "easeInOutExpo" ],
+        }, 250, function(){
+            prev.animate({
+              top: [ "50px", "easeInOutExpo" ],
+            }, 250, function(){
+                t.css('top', '0px');
+                prev.css('top', '0px');
+                t.insertBefore(prev);
+                t.toggleClass("popUp");
+            });
+        });
+      }
+    }*/
+    /*function fetchScores() {
+      $.ajax({
+        url: "http://ide.sijie123.com:3005/query",
+      }).done(function(data) {
+        console.log(data);
+        otherPlayer = JSON.parse(data);
+        console.log(otherPlayer);
+        displayAllPlayers();
+      })
+
+    }*/
+    function postScore() {
+      $.post({
+        url: "https://doyouevenmath.sijie123.com/score",
+        data: {user: username, score: sc}
+      }).done(function(data) {
+        console.log("Submitted");
+      })
+    }
+    /*function displayAllPlayers() {
+      for (let id in otherPlayer) {
+        let p = otherPlayer[id]
+        $("#scoreboard").append(
+          "<div class='card'><div class='nameFont'>" + p["user"] + "</div><div class='scoreFont'>" + p["score"] + "</div></div>"
+        )
+      }
+      $("#scoreboard").append(
+      "<div class='card' id='mycard'><div class='nameFont'>YOU</div><div class='scoreFont'>0</div></div>"
+      );
+    }*/
+    function newGame() {
+      $("#user").val("");
+      $("#restart").css('display', "none");
+      $("#user").show();
+      $("#user").focus();
+      $("#timer").html("00:30");
+      $("#score").html("0");
+      newQn();
+      time = 30;
+      sc = 0;
+      interval = setInterval(function() {
+        time--;
+        if (time <= 0) {
+          clearInterval(interval);
+          endGame();
+        }
+        $("#timer").html("00:" + format(time));
+      }, 1000);
+      $("#user").on("keypress", function(e) {
+        if (e.keyCode == 13) {
+          e.preventDefault();
+          var userAns = $("#user").val();
+          if (userAns == "") {
+            return;
+          }
+          if (userAns == ans) {
+            sc++;
+            updateScore();
+            playCorrect();
+            newQn();
+          }
+          else {
+            playWrong();
+            endGame();
+          }
+        }
+      })
+    }
+    $(document).ready(function() {
+      //fetchScores();
+      $("#username").on("keypress", function(e) {
+        if (e.keyCode == 13) {
+          e.preventDefault();
+          username = $("#username").val();
+          if (username == ""){
+            return;
+          }
+          $("#username").off("keypress");
+          $("#userBox").remove();
+          $("#gameBox").show();
+          $("#user").focus();
+          newGame();
+        }
+      })
+    });
+    </script>
+  </head>
+  <body>
+    <!--<div class="scoreboard" id="scoreboard">
+      <div class="header" id="header">
+        <div class="headerFont">Name</div>
+      </div>
+    </div>-->
+    <div style="position: fixed; top: 0" class="timerText" id="timer">
+      00:30
+    </div>
+    <div style="position: fixed; top: 0; right: 0" class="timerText" id="score">
+      0
+    </div>
+    <div id="gameBox" style="display: none; margin-top: calc(50vh - 50px); margin-left: 300px">
+      <font class="mainText" style="">
+        <div id="qn" style="display:inline">5 + 8 =</div>
+        <input id="user" class="niceInput" type="text"/>
+        <a href='#' id="restart" onclick='newGame()' style="display: none" class="niceInput">Retry</a>
+      </font>
+    </div>
+    <div id="userBox" style="margin-top: calc(50vh - 50px); margin-left: 300px">
+      <font class="mainText" style="">
+        <div id="qnName" style="display:inline">Name: </div>
+        <input id="username" class="niceInput" type="text" autofocus/>
+      </font>
+    </div>
+
+  </body>
+</html>

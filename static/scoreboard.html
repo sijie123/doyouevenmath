@@ -1,0 +1,164 @@
+<html>
+  <head>
+    <style>
+      @font-face { font-family: Consolas; src: url('clacon.ttf'); }
+      body {
+        background-color: #ffffff;
+      }
+      .mainText {
+        color: #ffffff;
+        font-family: Consolas;
+        font-size: 100px;
+      }
+      .timerText {
+        color: #ffffff;
+        font-family: Consolas;
+        font-size: 30px;
+      }
+      .niceInput {
+        height: 100px;
+        background-color: #000000;
+        font-size: 100px;
+        width: 300px;
+        border-color: #000000;
+        outline: none;
+        color: #ffffff;
+        font-family: Consolas;
+      }
+      .scoreTable {
+        width: 100%;
+        /*display: block;
+        float: right;*/
+      }
+      .header {
+        height: 20px;
+        width: 400px;
+        background-color: #ffffff;
+        float: right;
+      }
+      .headerFont {
+        color: #000000;
+        font-size: 16px;
+        vertical-align:bottom;
+        font-family: Consolas;
+        padding-top: 2px;
+        padding-left: 15px;
+      }
+      .card {
+        height: 50px;
+        width: 400px;
+        background-color: #ffffff;
+        float: right;
+        position: relative;
+      }
+      .scoreboard {
+        width: 70%;
+        position: fixed;
+        margin-left: 15%
+      }
+      .nameFont {
+        color: #000000;
+        font-size: 38px;
+        vertical-align:bottom;
+        font-family: Consolas;
+        padding-top: 6px;
+        padding-left: 15px;
+        width: 50%;
+      }
+      .scoreFont {
+        color: #000000;
+        font-size: 38px;
+        vertical-align:bottom;
+        font-family: Consolas;
+        padding-top: 6px;
+        padding-left: 15px;
+        width: 30%;
+      }
+      .popUp {
+        background-color: #d0d0d0;
+        border: 1px black;
+        border-color: #ffffff;
+        box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        z-index: 100;
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" crossorigin="anonymous"></script>
+    <script>
+    var interval;
+    var data = [];
+
+    function deleteEntry(pos) {
+      console.log(pos);
+      $("#scoreTable").find("tr:eq("+(pos + 1)+")").remove()
+      data.splice(pos, 1);
+    }
+    function addEntry(entry) {
+      for (let i = 0; i <= data.length; i++){
+        if (i == data.length || entry.score > data[i].score) {
+          let row = $("#scoreTable").find("tr:eq("+i+")").after("<tr><td class='nameFont'>" + entry["user"] + "</td><td class='scoreFont'>" + entry["score"] + "</td></tr>").next("tr");
+          data.splice(i, 0, entry);
+          row.animate({
+    		    backgroundColor: "#28a745"
+    	    }, 1000, function(done) {
+    	      row.animate({
+    	        backgroundColor: "#ffffff"
+    	      }, 1000);
+    	    });
+          //data.push(entry);
+          return;
+        }
+      }
+    }
+    function change(entry) {
+      //console.log("ADDING" + entry.user);
+      console.log(data);
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].user == entry.user && data[i].score < entry.score) {
+          deleteEntry(i);
+          addEntry(entry);
+          return;
+        }
+      }
+      addEntry(entry);
+      //console.log(data);
+      //console.log("END");
+    }
+
+    function fetchScores() {
+      $.ajax({
+        url: "https://doyouevenmath.sijie123.com/query",
+      }).done(function(data) {
+        console.log(data);
+        let newData = JSON.parse(data);
+        for (let id in newData) {
+          let d = newData[id];
+          change(d);
+        }
+      })
+
+    }
+    $(document).ready(function() {
+      //fetchScores();
+      interval = setInterval(function() {
+        fetchScores();
+      }, 1000);
+
+    });
+    </script>
+  </head>
+  <body>
+    <div class="scoreboard" id="scoreboard">
+      <table class="table scoreTable" id="scoreTable">
+        <tr><th class="nameFont">Name</th><th class="scoreFont">Score</th></tr>
+      </table>
+        <!--<div class="headerFont">Name</div>-->
+    </div>
+
+  </body>
+</html>
